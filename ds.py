@@ -1,5 +1,12 @@
 from discordstorage import core
-import threading, json, asyncio, random, sys, argparse, os, time
+import threading
+import json
+import asyncio
+import random
+import sys
+import os
+import time
+from tqdm import tqdm  # Import tqdm for progress bars
 
 TOKEN_SECRET = ""  # bot's secret token
 ROOM_ID = ""  # channel text ID
@@ -7,7 +14,7 @@ BOT_INFO = None
 FILES = None
 
 # Generates a file code from 0-4097
-def genCode():
+def gen_code():
     code = str(random.randint(0, 4098))
     if FILES is None:
         return code
@@ -16,12 +23,12 @@ def genCode():
     return code
 
 # Returns if the config file is configured or not.
-def isConfigured():
+def is_configured():
     return os.path.isfile('config.discord')
 
 # Invokes file uploading, to be used on a thread that's not in main thread.
 # Writes to config file accordingly.
-def tellupload(line1, line2, cmd, code, client):
+def tell_upload(line1, line2, cmd, code, client):
     while not client.isready():
         time.sleep(0.5)
     if not os.path.isfile(cmd):
@@ -40,30 +47,22 @@ def tellupload(line1, line2, cmd, code, client):
         print('[DONE] File upload complete')
     client.logout()
 
-def GetHumanReadable(size, precision=2):
-    suffixes = ['B', 'KB', 'MB', 'GB', 'TB']
-    suffixIndex = 0
-    while size > 1024 and suffixIndex < 4:
-        suffixIndex += 1  # increment the index of the suffix
-        size = size / 1024.0  # apply the division
-    return "%.*f%s" % (precision, size, suffixes[suffixIndex])
-
 # Invokes file downloading, to be used on a thread that's not in main thread
-def telldownload(client, inp):
+def tell_download(client, inp):
     while not client.isready():
         time.sleep(0.5)
     client.download(inp)
     client.logout()
 
 # Invokes file deleting, to be used on a thread that's not in main thread
-def telldelete(client, code):
+def tell_delete(client, code):
     while not client.isready():
         time.sleep(0.5)
     client.delete(code)
     client.logout()
 
 # Parses cmd line arguments
-def parseArgs(inp):
+def parse_args(inp):
     commands = ['-h', '-help', '-l', '-list', '-d', '-download', '-u', '-upload', '-delete', '-del']
     if len(inp) == 1:
         print('----------------------\n|DiscordStorage v0.2 |')
@@ -71,11 +70,11 @@ def parseArgs(inp):
         print('\nUsage: python ds.py [command] (target)\n')
         print('COMMANDS:')
         print('[-h, -help]: Show the current message')
-        print('[-l, -list]: Lists all the file informations that has been uploaded to the server')
-        print('[-d, -download] (FILE CODE): Downloads a file from the server. A filecode is taken in as the file identifier')
+        print('[-l, -list]: Lists all the file information that has been uploaded to the server')
+        print('[-d, -download] (FILE CODE): Downloads a file from the server. A file code is taken in as the file identifier')
         print('[-u, -upload] (FILE PATH/DRAG FILE): Uploads a file to the server. The full file directory is taken in for the argument')
         print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration\n')
-    elif isConfigured():
+    elif is_configured():
         with open('config.discord', 'r') as f:
             first = f.readline()
             second = f.readline()
@@ -90,15 +89,15 @@ def parseArgs(inp):
                 else:
                     obj = json.loads(second)[inp[inp.index(el) + 1]]
                     print('DOWNLOADING: ' + obj[0])
-                    print('SIZE: ' + GetHumanReadable(obj[1]))
+                    print('SIZE: ' + get_human_readable(obj[1]))
                     client = core.Core(os.getcwd() + "/", TOKEN_SECRET, ROOM_ID)
-                    threading.Thread(target=telldownload, args=(client, obj,)).start()
+                    threading.Thread(target=tell_download, args=(client, obj,)).start()
                     client.start()
                     break
             elif '-u' == el or '-upload' == el:
                 print('UPLOADING: ' + inp[inp.index(el) + 1])
                 client = core.Core(os.getcwd() + "/", TOKEN_SECRET, ROOM_ID)
-                threading.Thread(target=tellupload, args=(first, second, inp[inp.index(el) + 1], genCode(), client,)).start()
+                threading.Thread(target=tell_upload, args=(first, second, inp[inp.index(el) + 1], gen_code(), client,)).start()
                 client.start()
                 break
             elif '-list' == el or '-l' == el:
@@ -107,14 +106,14 @@ def parseArgs(inp):
                     for key in FILES.keys():
                         if FILES[key] is None:
                             # correct nullified attribute
-                            print(' [CONSOLE] Removed incorrect file with filecode ' + str(key))
+                            print(' [CONSOLE] Removed incorrect file with file code ' + str(key))
                             with open('config.discord', 'w') as f:
                                 f.write(first)
                                 jobject = json.loads(second)
                                 del jobject[key]
                                 f.write(json.dumps(jobject))
                         else:
-                            print('name: ' + str(FILES[key][0]) + ' | code: ' + str(key) + ' | size: ' + GetHumanReadable(FILES[key][1]))
+                            print('name: ' + str(FILES[key][0]) + ' | code: ' + str(key) + ' | size: ' + get_human_readable(FILES[key][1]))
                     print('\n')
                 break
             elif '-delete' == el or '-del' == el:
@@ -124,7 +123,7 @@ def parseArgs(inp):
                     code = inp[inp.index(el) + 1]
                     print('DELETING: ' + FILES[code][0])
                     client = core.Core(os.getcwd() + "/", TOKEN_SECRET, ROOM_ID)
-                    threading.Thread(target=telldelete, args=(client, code,)).start()
+                    threading.Thread(target=tell_delete, args=(client, code,)).start()
                     with open('config.discord', 'w') as f:
                         f.write(first)
                         jobject = json.loads(second)
@@ -137,13 +136,21 @@ def parseArgs(inp):
                 print('|github.com/F4ir|\n-----------------')
                 print('\nUsage: python ds.py [command] (target)\n')
                 print('COMMANDS:')
-                print('[-h, -help]: Show the current message')
-                print('[-l, -list]: Lists all the file informations that has been uploaded to the server')
-                print('[-d, -download] (FILE CODE): Downloads a file from the server. A filecode is taken in as the file identifier')
+                print('[-h, -help]: Show the help message')
+                print('[-l, -list]: Lists all the file information that has been uploaded to the server')
+                print('[-d, -download] (FILE CODE): Downloads a file from the server. A file code is taken in as the file identifier')
                 print('[-u, -upload] (FILE PATH/DRAG FILE): Uploads a file to the server. The full file directory is taken in for the argument')
                 print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration\n')
 
-if not isConfigured():
+def get_human_readable(size, precision=2):
+    suffixes = ['B', 'KB', 'MB', 'GB', 'TB']
+    suffix_index = 0
+    while size > 1024 and suffix_index < 4:
+        suffix_index += 1  # increment the index of the suffix
+        size = size / 1024.0  # apply the division
+    return "%.*f%s" % (precision, size, suffixes[suffix_index])
+
+if not is_configured():
     print('Welcome to DiscordStorage.')
     print('Go to http://github.com/F4ir/DiscordStorage for instructions.')
     TOKEN_SECRET = input('Bot token ID (Will be stored in plaintext in config file):')
@@ -163,12 +170,12 @@ else:
     ROOM_ID = json.loads(first.replace("\\n", ""))['ROOM_ID']
 
 try:
-    parseArgs(sys.argv)
+    parse_args(sys.argv)
 except IndexError:
     print('\nUsage: python ds.py [command] (target)\n')
     print('COMMANDS:')
     print('[-h, -help]: Show the help message')
-    print('[-l, -list]: Lists all the file informations that has been uploaded to the server')
-    print('[-d, -download] (FILE CODE): Downloads a file from the server. A filecode is taken in as the file identifier')
+    print('[-l, -list]: Lists all the file information that has been uploaded to the server')
+    print('[-d, -download] (FILE CODE): Downloads a file from the server. A file code is taken in as the file identifier')
     print('[-u, -upload] (FILE PATH/DRAG FILE): Uploads a file to the server. The full file directory is taken in for the argument')
     print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration\n')
