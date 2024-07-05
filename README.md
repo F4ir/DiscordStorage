@@ -26,6 +26,8 @@ Run ```python ds.py``` in commandprompt or run ```start.bat``` to begin configur
 
 
 *You can delete ```config.discord``` to reconfigure the program.*
+*To use it on multiple devices save ```config.discord``` to your other devices.*
+
 #### Commands
 Usage: ```python ds.py [flag] {args}```
 
