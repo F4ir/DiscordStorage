@@ -65,7 +65,7 @@ def tell_delete(client, code):
 def parse_args(inp):
     commands = ['-h', '-help', '-l', '-list', '-d', '-download', '-u', '-upload', '-delete', '-del']
     if len(inp) == 1:
-        print('----------------------\n|DiscordStorage v0.2 |')
+        print('----------------------\n|DiscordStorage v0.3 |')
         print('|github.com/F4ir     |\n----------------------')
         print('\nUsage: python ds.py [command] (target)\n')
         print('COMMANDS:')
