@@ -1,4 +1,9 @@
-import os, io, aiohttp, asyncio, discord
+import os
+import io
+import aiohttp
+import asyncio
+import discord
+from tqdm import tqdm  # Import tqdm for progress bars
 from .Session import Session
 
 class Core:
@@ -56,7 +61,7 @@ class Core:
     async def async_download(self, inp):
         os.makedirs(os.path.dirname(self.directory + "downloads/" + inp[0]), exist_ok=True)
         with open(self.directory + "downloads/" + inp[0], 'wb') as f:
-            for i in range(len(inp[2])):
+            for i in tqdm(range(len(inp[2])), desc=f'Downloading {inp[0]}', unit='file'):
                 agent = {'User-Agent': 'DiscordStorageBot (http://github.com/F4ir/discordstorage)'}
                 async with aiohttp.ClientSession() as session:
                     async with session.get(inp[2][i], headers=agent) as r:
@@ -70,15 +75,17 @@ class Core:
     async def async_upload(self, inp, code):
         urls = []
         with open(inp, 'rb') as f:
-            for i in range(self.splitFile(inp)):
+            file_size = os.path.getsize(inp)
+            num_chunks = self.split_file(inp)
+            for i in tqdm(range(num_chunks), desc=f'Uploading {os.path.basename(inp)}', unit='chunk'):
                 o = io.BytesIO(f.read(24000000))
-                discord_file = discord.File(fp=o, filename=code + "." + str(i))
+                discord_file = discord.File(fp=o, filename=f'{code}.{i}')
                 await self.session.getChannel().send(file=discord_file)
                 async for message in self.session.getChannel().history(limit=None):
                     if message.author == self.client.user:
                         urls.append(message.attachments[0].url)
                         break
-        return [os.path.basename(inp), os.path.getsize(inp), urls]
+        return [os.path.basename(inp), file_size, urls]
 
     # Deletes a file from the server.
     # code = application-generated file code
@@ -88,13 +95,12 @@ class Core:
         async for message in channel.history(limit=None):
             if message.attachments and message.attachments[0].filename.startswith(code):
                 await message.delete()
-                print('[DONE] File delete complete')
-                return
-        print('[ERROR] File not found in the channel')
+                print(f'[DONE] Deleted {message.attachments[0].filename}')
+        print('[DONE] File delete complete')
 
     # Finds out how many file blocks are needed to upload a file.
     # Regular max upload size at a time: 8MB.
     # Discord NITRO max upload size at a time: 50MB.
     # Change accordingly if needed.
-    def splitFile(self, f):
-        return (os.path.getsize(f) // 24000000) + 1
+    def split_file(self, file_path):
+        return (os.path.getsize(file_path) // 24000000) + 1
