@@ -37,7 +37,7 @@ Usage: ```python ds.py [flag] {args}```
 
 ```-delete {FILE_CODE}``` The -delete or -del flag and the file code will delete the file of your selected code that you chose from the ```-list``` command from the discord server and the config file.
 
-```share /full_path/file.ext``` The -share or -s flag and the full file path uploads the file to gofile.io and provides a download link.
+```-share /full_path/file.ext``` The -share or -s flag and the full file path uploads the file to gofile.io and provides a download link.
 
 ```-list``` The -list or -l flag will list all the file names/codes/sizes uploaded to the discord server.
 
