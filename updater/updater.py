@@ -5,7 +5,7 @@ import subprocess
 import time
 
 # Define the current version
-current_version = "v0.4"
+current_version = "v0.5"
 
 # URL to check the latest version
 version_url = "https://raw.githubusercontent.com/F4ir/DiscordStorage-Updater/main/version"
