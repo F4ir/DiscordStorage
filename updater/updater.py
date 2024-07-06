@@ -3,6 +3,8 @@ import shutil
 import requests
 import subprocess
 import time
+import tempfile
+import stat
 
 # Define the current version
 current_version = "v0.5"
@@ -23,19 +25,26 @@ def get_latest_version(url):
         print(f"Error checking the latest version: {e}")
         return None
 
-def make_folder_visible(directory, folder_name):
-    try:
-        subprocess.run(["attrib", "-h", os.path.join(directory, folder_name)], check=True)
-    except subprocess.CalledProcessError as e:
-        print(f"Error making {folder_name} visible: {e}")
+def make_folder_writable(directory, folder_name):
+    folder_path = os.path.join(directory, folder_name)
+    for root, dirs, files in os.walk(folder_path):
+        for d in dirs:
+            os.chmod(os.path.join(root, d), stat.S_IWRITE)
+        for f in files:
+            os.chmod(os.path.join(root, f), stat.S_IWRITE)
+    os.chmod(folder_path, stat.S_IWRITE)
 
-def wait_for_git_deletion(directory):
-    while os.path.exists(os.path.join(directory, ".git")):
-        print(".git folder still exists. Please delete it manually.")
-        time.sleep(2)
+def hide_folder(directory, folder_name):
+    folder_path = os.path.join(directory, folder_name)
+    try:
+        subprocess.run(["attrib", "+h", folder_path], check=True)
+    except subprocess.CalledProcessError as e:
+        print(f"Error hiding {folder_name} folder: {e}")
 
 def clear_directory(directory):
     for item in os.listdir(directory):
+        if item == "config.discord":
+            continue
         item_path = os.path.join(directory, item)
         try:
             if os.path.isfile(item_path) or os.path.islink(item_path):
@@ -46,13 +55,25 @@ def clear_directory(directory):
             print(f"Failed to delete {item_path}. Reason: {e}")
 
 def is_directory_empty(directory):
-    return len(os.listdir(directory)) == 0
+    for item in os.listdir(directory):
+        if item != "config.discord":
+            return False
+    return True
 
-def clone_repository(repo_url, directory):
+def clone_repository(repo_url, temp_directory):
     try:
-        subprocess.run(["git", "clone", repo_url, directory], check=True)
+        subprocess.run(["git", "clone", repo_url, temp_directory], check=True)
     except subprocess.CalledProcessError as e:
         print(f"Error cloning the repository: {e}")
+
+def move_contents(src, dst):
+    for item in os.listdir(src):
+        s = os.path.join(src, item)
+        d = os.path.join(dst, item)
+        if os.path.isdir(s):
+            shutil.copytree(s, d, dirs_exist_ok=True)
+        else:
+            shutil.copy2(s, d)
 
 def main():
     # Get the current working directory
@@ -80,13 +101,16 @@ def main():
         return
 
     if os.path.exists(git_folder):
-        print(".git folder exists. Making it visible.")
-        make_folder_visible(current_directory, ".git")
-        print("You need to have git installed to update, you can install it at: https://git-scm.com/download/win")
-        input("Press any key to continue...")
+        print(".git folder exists. Making it writable.")
+        make_folder_writable(current_directory, ".git")
 
-        print("Please delete the .git folder manually.")
-        wait_for_git_deletion(current_directory)
+        # Now delete the .git folder
+        print("Deleting the .git folder.")
+        try:
+            shutil.rmtree(git_folder)
+        except Exception as e:
+            print(f"Failed to delete {git_folder}. Reason: {e}")
+            return
 
     print(f"Updating from version {current_version} to {latest_version}.")
 
@@ -97,8 +121,16 @@ def main():
     while not is_directory_empty(current_directory):
         time.sleep(0.5)
 
-    # Clone the repository into the current directory
-    clone_repository(repo_url, current_directory)
+    # Clone the repository into a temporary directory
+    with tempfile.TemporaryDirectory() as temp_directory:
+        clone_repository(repo_url, temp_directory)
+
+        # Move the contents of the temporary directory to the current directory
+        move_contents(temp_directory, current_directory)
+
+    # Hide the .git folder if it exists
+    if os.path.exists(git_folder):
+        hide_folder(current_directory, ".git")
 
     print("Update completed successfully.")
 
