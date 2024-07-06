@@ -72,7 +72,7 @@ def share_file(file_path):
 def parse_args(inp):
     commands = ['-h', '-help', '-l', '-list', '-d', '-download', '-u', '-upload', '-delete', '-del', '-s', '-share']
     if len(inp) == 1:
-        print('----------------------\n|DiscordStorage v0.4 |')
+        print('----------------------\n|DiscordStorage v0.5 |')
         print('|github.com/F4ir     |\n----------------------')
         print('\nUsage: python ds.py [command] (target)\n')
         print('COMMANDS:')
