@@ -10,7 +10,7 @@ import stat
 current_version = "v0.5"
 
 # URL to check the latest version
-version_url = "https://raw.githubusercontent.com/F4ir/DiscordStorage-Updater/main/version"
+version_url = "https://raw.githubusercontent.com/F4ir/DiscordStorage/main/version.version"
 
 # URL of the GitHub repository to download
 repo_url = "https://github.com/F4ir/DiscordStorage.git"
