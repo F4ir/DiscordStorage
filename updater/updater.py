@@ -94,6 +94,10 @@ def main():
         return
 
     print("Update detected.")
+    print("")
+    print("You need to have Git installed to update.")
+    print("You can install Git at: https://git-scm.com/download/win")
+    print("")
     choice = input("Do you want to update to the latest version? (Y/N): ").strip().lower()
 
     if choice != 'y':
