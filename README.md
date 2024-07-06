@@ -7,7 +7,7 @@ Utilize Discord servers as cloud storage!
 #### Setting up the bot/server
 
 ##### 1) Creating the bot
-In order for this program to work, you're going to need to create a discord bot so we can connect to the discord API. Go to [this](https://discordapp.com/developers/applications/me) link to create a bot. Make sure to enable these 3 slots. [Here's](https://imgur.com/a/RXCPg3s) a picture of the slots.
+In order for this program to work, you're going to need to create a discord bot so we can connect to the discord API. Go to [this](https://discordapp.com/developers/applications/me) link to create a bot. Make sure to enable these 3 slots in the tab "bot". [Here's](https://imgur.com/a/RXCPg3s) a picture of the slots.
 You will need to copy your bots client ID aswell. You can fint that at the tab "OAuth2" and then you will see the client ID. [Here](https://imgur.com/a/VhuKLVw) you will see how it looks like. **Keep note of the token and the client ID.**
 ##### 2) Setting up the server
 The bot will need a place to upload files. Create a new discord server, make sure no one else is on it unless you want them to access your files.
