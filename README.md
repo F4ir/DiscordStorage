@@ -13,8 +13,8 @@ You will need to copy your bots client ID aswell. You can fint that at the tab "
 The bot will need a place to upload files. Create a new discord server, make sure no one else is on it unless you want them to access your files.
 
 ##### 3) Adding your bot to the server
-To add the bot to the server (assuming your bot isn't public), go to the following link: https://discord.com/oauth2/authorize?client_id={CLIENT_ID}&permissions=8&scope=bot
-Replace {CLIENT_ID} with the client ID you copied earlier. Then, select the server you just made and authorize. Your server should now show your bot like [this](http://i.imgur.com/NnqQAv7.png).
+To add the bot to the server, go to the following link: https://discord.com/oauth2/authorize?client_id={CLIENT_ID}&permissions=8&scope=bot
+Replace {CLIENT_ID} with the client ID you copied earlier. Then, select the server you just made and authorize. Your server should now show your bot like [this](https://imgur.com/a/VVPvVGZ).
 
 
 
