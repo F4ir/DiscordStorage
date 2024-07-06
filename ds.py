@@ -1,4 +1,5 @@
 from discordstorage import core
+from discordstorage.upload import upload_to_gofile  # Importing the upload function from upload.py
 import threading
 import json
 import asyncio
@@ -6,10 +7,12 @@ import random
 import sys
 import os
 import time
-from tqdm import tqdm  # Import tqdm for progress bars
+from tqdm import tqdm 
 
-TOKEN_SECRET = ""  # bot's secret token
-ROOM_ID = ""  # channel text ID
+
+# DONT TOUCH ANYTHING
+TOKEN_SECRET = ""  
+ROOM_ID = ""  
 BOT_INFO = None
 FILES = None
 
@@ -61,9 +64,13 @@ def tell_delete(client, code):
     client.delete(code)
     client.logout()
 
+# Uploads file to gofile.io and returns the download link
+def share_file(file_path):
+    upload_to_gofile(file_path)
+
 # Parses cmd line arguments
 def parse_args(inp):
-    commands = ['-h', '-help', '-l', '-list', '-d', '-download', '-u', '-upload', '-delete', '-del']
+    commands = ['-h', '-help', '-l', '-list', '-d', '-download', '-u', '-upload', '-delete', '-del', '-s', '-share']
     if len(inp) == 1:
         print('----------------------\n|DiscordStorage v0.3 |')
         print('|github.com/F4ir     |\n----------------------')
@@ -73,7 +80,8 @@ def parse_args(inp):
         print('[-l, -list]: Lists all the file information that has been uploaded to the server')
         print('[-d, -download] (FILE CODE): Downloads a file from the server. A file code is taken in as the file identifier')
         print('[-u, -upload] (FILE PATH/DRAG FILE): Uploads a file to the server. The full file directory is taken in for the argument')
-        print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration\n')
+        print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration')
+        print('[-s, -share] (DRAG FILE): Shares a file by uploading it to gofile.io and providing a download link\n')
     elif is_configured():
         with open('config.discord', 'r') as f:
             first = f.readline()
@@ -95,9 +103,13 @@ def parse_args(inp):
                     client.start()
                     break
             elif '-u' == el or '-upload' == el:
-                print('UPLOADING: ' + inp[inp.index(el) + 1])
+                file_path = inp[inp.index(el) + 1]
+                if not os.path.isfile(file_path):
+                    print(f'\n[ERROR] File "{file_path}" does not exist.\n')
+                    break
+                print('UPLOADING: ' + file_path)
                 client = core.Core(os.getcwd() + "/", TOKEN_SECRET, ROOM_ID)
-                threading.Thread(target=tell_upload, args=(first, second, inp[inp.index(el) + 1], gen_code(), client,)).start()
+                threading.Thread(target=tell_upload, args=(first, second, file_path, gen_code(), client,)).start()
                 client.start()
                 break
             elif '-list' == el or '-l' == el:
@@ -140,7 +152,15 @@ def parse_args(inp):
                 print('[-l, -list]: Lists all the file information that has been uploaded to the server')
                 print('[-d, -download] (FILE CODE): Downloads a file from the server. A file code is taken in as the file identifier')
                 print('[-u, -upload] (FILE PATH/DRAG FILE): Uploads a file to the server. The full file directory is taken in for the argument')
-                print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration\n')
+                print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration')
+                print('[-s, -share] (DRAG FILE): Shares a file by uploading it to gofile.io and providing a download link\n')
+            elif '-s' == el or '-share' == el:
+                file_path = inp[inp.index(el) + 1]
+                if not os.path.isfile(file_path):
+                    print(f'\n[ERROR] File "{file_path}" does not exist.\n')
+                    break
+                share_file(file_path)
+                break
 
 def get_human_readable(size, precision=2):
     suffixes = ['B', 'KB', 'MB', 'GB', 'TB']
@@ -178,4 +198,5 @@ except IndexError:
     print('[-l, -list]: Lists all the file information that has been uploaded to the server')
     print('[-d, -download] (FILE CODE): Downloads a file from the server. A file code is taken in as the file identifier')
     print('[-u, -upload] (FILE PATH/DRAG FILE): Uploads a file to the server. The full file directory is taken in for the argument')
-    print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration\n')
+    print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration')
+    print('[-s, -share] (DRAG FILE): Shares a file by uploading it to gofile.io and providing a download link\n')
