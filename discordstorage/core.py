@@ -3,7 +3,7 @@ import io
 import aiohttp
 import asyncio
 import discord
-from tqdm import tqdm  # Import tqdm for progress bars
+from tqdm import tqdm
 from .Session import Session
 
 class Core:
