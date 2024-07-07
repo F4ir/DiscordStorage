@@ -7,6 +7,8 @@ import threading
 from discordstorage import core
 from discordstorage.upload import upload_to_gofile
 
+
+# DONT TOUCH
 # Constants for configuration files and folder
 CONFIG_FOLDER = 'configs/'
 BOT_CONFIG_FILE = 'botconfig.discord'
@@ -16,6 +18,7 @@ FILE_CONFIG_FILE = 'fileconfig.discord'
 if not os.path.exists(CONFIG_FOLDER):
     os.makedirs(CONFIG_FOLDER)
 
+# DONT TOUCH
 # Global variables for bot and file configurations
 TOKEN_SECRET = ""
 ROOM_ID = ""
