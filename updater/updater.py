@@ -43,7 +43,7 @@ def hide_folder(directory, folder_name):
 
 def clear_directory(directory):
     for item in os.listdir(directory):
-        if item in ["botconfig.discord", "fileconfig.discord", "downloads", "configs"]:
+        if item in ["downloads", "configs"]:
             continue
         item_path = os.path.join(directory, item)
         try:
@@ -56,7 +56,7 @@ def clear_directory(directory):
 
 def is_directory_empty(directory):
     for item in os.listdir(directory):
-        if item not in ["botconfig.discord", "fileconfig.discord", "downloads", "configs"]:
+        if item not in ["downloads", "configs"]:
             return False
     return True
 
