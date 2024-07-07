@@ -1,3 +1,5 @@
+# DiscordStorage was proudly coded by F4ir
+
 import os
 import json
 import sys
@@ -208,3 +210,5 @@ try:
     parse_args(sys.argv)
 except IndexError:
     print('\n[ERROR] Invalid arguments. Use -h or -help for usage information.\n')
+    
+# DiscordStorage was proudly coded by F4ir
