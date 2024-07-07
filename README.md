@@ -44,7 +44,9 @@ Usage: ```python ds.py [flag] {args}```
 
 ```-help``` The -help or -h flag will display the help message (these commands listed here).
 
+#### Extra
 
+Run ```look_for_updates.bat``` to check for updates and to update the scripts.
 
 #### Disclaimer
 You shouldn't be using this as your main source of file storage. Program was inspired by [nigel-DiscordStorage](https://github.com/nigel/DiscordStorage). 
