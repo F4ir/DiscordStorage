@@ -51,6 +51,4 @@ Run ```look_for_updates.bat``` to check for updates and to update the scripts.
 
 
 #### Disclaimer
-You shouldn't be using this as your main source of file storage. Program was inspired by [nigel-DiscordStorage](https://github.com/nigel/DiscordStorage). 
-
-It is his Original code but i added some extra futures.
+You shouldn't be using this as your main source of file storage.
