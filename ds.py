@@ -1,16 +1,24 @@
-from discordstorage import core
-from discordstorage.upload import upload_to_gofile
-import threading
+import os
 import json
 import sys
-import os
 import time
 import random
-from tqdm import tqdm
+import threading
+from discordstorage import core
+from discordstorage.upload import upload_to_gofile
 
-# DONT TOUCH ANYTHING
-TOKEN_SECRET = ""  
-ROOM_ID = ""  
+# Constants for configuration files and folder
+CONFIG_FOLDER = 'configs/'
+BOT_CONFIG_FILE = 'botconfig.discord'
+FILE_CONFIG_FILE = 'fileconfig.discord'
+
+# Ensure the configs folder exists
+if not os.path.exists(CONFIG_FOLDER):
+    os.makedirs(CONFIG_FOLDER)
+
+# Global variables for bot and file configurations
+TOKEN_SECRET = ""
+ROOM_ID = ""
 BOT_INFO = None
 FILES = None
 
@@ -25,13 +33,13 @@ def gen_code():
 
 # Returns if the botconfig file is configured or not.
 def is_bot_configured():
-    return os.path.isfile('botconfig.discord')
+    return os.path.isfile(CONFIG_FOLDER + BOT_CONFIG_FILE)
 
 # Returns if the fileconfig file is configured or not.
 def is_file_configured():
-    return os.path.isfile('fileconfig.discord')
+    return os.path.isfile(CONFIG_FOLDER + FILE_CONFIG_FILE)
 
-# Invokes file uploading, to be used on a thread that's not in main thread.
+# Invokes file uploading, to be used on a thread that's not in the main thread.
 # Writes to fileconfig file accordingly.
 def tell_upload(bot_config, file_config, cmd, code, client):
     while not client.isready():
@@ -46,35 +54,35 @@ def tell_upload(bot_config, file_config, cmd, code, client):
     else:
         jobject = json.loads(file_config)
         jobject[code] = flcode
-        with open('fileconfig.discord', 'w') as f:
+        with open(CONFIG_FOLDER + FILE_CONFIG_FILE, 'w') as f:
             f.write(json.dumps(jobject))
         print('[DONE] File upload complete')
     client.logout()
 
-# Invokes file downloading, to be used on a thread that's not in main thread
+# Invokes file downloading, to be used on a thread that's not in the main thread.
 def tell_download(client, inp):
     while not client.isready():
         time.sleep(0.5)
     client.download(inp)
     client.logout()
 
-# Invokes file deleting, to be used on a thread that's not in main thread
+# Invokes file deleting, to be used on a thread that's not in the main thread.
 def tell_delete(client, code):
     while not client.isready():
         time.sleep(0.5)
     client.delete(code)
     client.logout()
 
-# Uploads file to gofile.io and returns the download link
+# Uploads file to gofile.io and returns the download link.
 def share_file(file_path):
     upload_to_gofile(file_path)
 
-# Parses cmd line arguments
+# Parses command line arguments.
 def parse_args(inp):
     commands = ['-h', '-help', '-l', '-list', '-d', '-download', '-u', '-upload', '-delete', '-del', '-s', '-share']
     if len(inp) == 1:
-        print('----------------------\n|DiscordStorage v0.5 |')
-        print('|github.com/F4ir     |\n----------------------')
+        print('----------------------\n| DiscordStorage v0.5 |\n----------------------')
+        print('| github.com/F4ir     |\n----------------------')
         print('\nUsage: python ds.py [command] (target)\n')
         print('COMMANDS:')
         print('[-h, -help]: Show the current message')
@@ -84,9 +92,9 @@ def parse_args(inp):
         print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration')
         print('[-s, -share] (DRAG FILE): Shares a file by uploading it to gofile.io and providing a download link\n')
     elif is_bot_configured() and is_file_configured():
-        with open('botconfig.discord', 'r') as f:
+        with open(CONFIG_FOLDER + BOT_CONFIG_FILE, 'r') as f:
             bot_config = json.loads(f.read())
-        with open('fileconfig.discord', 'r') as f:
+        with open(CONFIG_FOLDER + FILE_CONFIG_FILE, 'r') as f:
             file_config = f.read()
 
         global TOKEN_SECRET, ROOM_ID, FILES
@@ -138,14 +146,14 @@ def parse_args(inp):
                     print('DELETING: ' + FILES[code][0])
                     client = core.Core(os.getcwd() + "/", TOKEN_SECRET, ROOM_ID)
                     threading.Thread(target=tell_delete, args=(client, code,)).start()
-                    with open('fileconfig.discord', 'w') as f:
+                    with open('configs/fileconfig.discord', 'w') as f:
                         del FILES[code]
                         f.write(json.dumps(FILES))
                     client.start()
                     break
             elif '-help' == el or '-h' == el:
-                print('-----------------\n|DiscordStorage |')
-                print('|github.com/F4ir|\n-----------------')
+                print('-----------------\n| DiscordStorage |\n-----------------')
+                print('| github.com/F4ir|\n-----------------')
                 print('\nUsage: python ds.py [command] (target)\n')
                 print('COMMANDS:')
                 print('[-h, -help]: Show the help message')
@@ -162,14 +170,20 @@ def parse_args(inp):
                 share_file(file_path)
                 break
 
+# Converts size to human-readable format.
 def get_human_readable(size, precision=2):
     suffixes = ['B', 'KB', 'MB', 'GB', 'TB']
     suffix_index = 0
-    while size > 1024 and suffix_index < 4:
-        suffix_index += 1  # increment the index of the suffix
-        size = size / 1024.0  # apply the division
-    return "%.*f%s" % (precision, size, suffixes[suffix_index])
+    while size > 1024 and suffix_index < len(suffixes) - 1:
+        suffix_index += 1
+        size = size / 1024.0
+    return f"{size:.{precision}f} {suffixes[suffix_index]}"
 
+# Clears the screen on Windows.
+def clear_screen():
+    os.system('cls')
+
+# Checks if bot configuration is not yet done.
 if not is_bot_configured():
     print('Welcome to DiscordStorage.')
     print('Go to http://github.com/F4ir/DiscordStorage for instructions.')
@@ -177,21 +191,16 @@ if not is_bot_configured():
     ROOM_ID = input('Enter channel ID to store files in:')
     if len(ROOM_ID) <= 0:
         ROOM_ID = None
-    with open('botconfig.discord', 'w') as f:
+    clear_screen()  # Clear the screen after inputting token and channel ID
+    with open(CONFIG_FOLDER + BOT_CONFIG_FILE, 'w') as f:
         f.write(json.dumps({'TOKEN': TOKEN_SECRET, 'ROOM_ID': ROOM_ID}))
-else:
-    with open('botconfig.discord', 'r') as f:
-        BOT_INFO = json.loads(f.read())
-    TOKEN_SECRET = BOT_INFO['TOKEN']
-    ROOM_ID = BOT_INFO['ROOM_ID']
 
+# Checks if file configuration is not yet done.
 if not is_file_configured():
-    with open('fileconfig.discord', 'w') as f:
+    with open(CONFIG_FOLDER + FILE_CONFIG_FILE, 'w') as f:
         f.write(json.dumps({}))
-else:
-    with open('fileconfig.discord', 'r') as f:
-        FILES = json.loads(f.read())
 
+# Parses command line arguments provided.
 try:
     parse_args(sys.argv)
 except IndexError:
