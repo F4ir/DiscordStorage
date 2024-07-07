@@ -1,8 +1,9 @@
+# DiscordStorage was proudly coded by F4ir
+
 import discord,asyncio
 
 '''
 this class uses discord.py
-seperate API will be written soon
 to reduce # of dependencies
 Refer to the following documentation:
 http://discordpy.readthedocs.io/en/latest/api.html
@@ -52,3 +53,5 @@ class Session:
     #Returns the async loop.
     def getLoop(self):
         return loop
+
+# DiscordStorage was proudly coded by F4ir
