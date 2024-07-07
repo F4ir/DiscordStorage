@@ -1,14 +1,12 @@
 from discordstorage import core
-from discordstorage.upload import upload_to_gofile  # Importing the upload function from upload.py
+from discordstorage.upload import upload_to_gofile
 import threading
 import json
-import asyncio
-import random
 import sys
 import os
 import time
-from tqdm import tqdm 
-
+import random
+from tqdm import tqdm
 
 # DONT TOUCH ANYTHING
 TOKEN_SECRET = ""  
@@ -25,13 +23,17 @@ def gen_code():
         code = str(random.randint(0, 4098))
     return code
 
-# Returns if the config file is configured or not.
-def is_configured():
-    return os.path.isfile('config.discord')
+# Returns if the botconfig file is configured or not.
+def is_bot_configured():
+    return os.path.isfile('botconfig.discord')
+
+# Returns if the fileconfig file is configured or not.
+def is_file_configured():
+    return os.path.isfile('fileconfig.discord')
 
 # Invokes file uploading, to be used on a thread that's not in main thread.
-# Writes to config file accordingly.
-def tell_upload(line1, line2, cmd, code, client):
+# Writes to fileconfig file accordingly.
+def tell_upload(bot_config, file_config, cmd, code, client):
     while not client.isready():
         time.sleep(0.5)
     if not os.path.isfile(cmd):
@@ -42,10 +44,9 @@ def tell_upload(line1, line2, cmd, code, client):
     if flcode == -1:
         print('[ERROR] File upload fail')
     else:
-        jobject = json.loads(line2)
+        jobject = json.loads(file_config)
         jobject[code] = flcode
-        with open('config.discord', 'w') as f:
-            f.write(line1)
+        with open('fileconfig.discord', 'w') as f:
             f.write(json.dumps(jobject))
         print('[DONE] File upload complete')
     client.logout()
@@ -82,20 +83,23 @@ def parse_args(inp):
         print('[-u, -upload] (FILE PATH/DRAG FILE): Uploads a file to the server. The full file directory is taken in for the argument')
         print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration')
         print('[-s, -share] (DRAG FILE): Shares a file by uploading it to gofile.io and providing a download link\n')
-    elif is_configured():
-        with open('config.discord', 'r') as f:
-            first = f.readline()
-            second = f.readline()
-        global TOKEN_SECRET, FILES
-        TOKEN_SECRET = json.loads(first.replace("\\n", ""))['TOKEN']
-        FILES = json.loads(second)
+    elif is_bot_configured() and is_file_configured():
+        with open('botconfig.discord', 'r') as f:
+            bot_config = json.loads(f.read())
+        with open('fileconfig.discord', 'r') as f:
+            file_config = f.read()
+
+        global TOKEN_SECRET, ROOM_ID, FILES
+        TOKEN_SECRET = bot_config['TOKEN']
+        ROOM_ID = bot_config['ROOM_ID']
+        FILES = json.loads(file_config)
 
         for el in inp:
             if '-d' == el or '-download' == el:
                 if not (FILES and inp[inp.index(el) + 1] in FILES.keys()):
                     print('\n[ERROR] File code not found\n')
                 else:
-                    obj = json.loads(second)[inp[inp.index(el) + 1]]
+                    obj = FILES[inp[inp.index(el) + 1]]
                     print('DOWNLOADING: ' + obj[0])
                     print('SIZE: ' + get_human_readable(obj[1]))
                     client = core.Core(os.getcwd() + "/", TOKEN_SECRET, ROOM_ID)
@@ -109,7 +113,7 @@ def parse_args(inp):
                     break
                 print('UPLOADING: ' + file_path)
                 client = core.Core(os.getcwd() + "/", TOKEN_SECRET, ROOM_ID)
-                threading.Thread(target=tell_upload, args=(first, second, file_path, gen_code(), client,)).start()
+                threading.Thread(target=tell_upload, args=(bot_config, file_config, file_path, gen_code(), client,)).start()
                 client.start()
                 break
             elif '-list' == el or '-l' == el:
@@ -119,11 +123,9 @@ def parse_args(inp):
                         if FILES[key] is None:
                             # correct nullified attribute
                             print(' [CONSOLE] Removed incorrect file with file code ' + str(key))
-                            with open('config.discord', 'w') as f:
-                                f.write(first)
-                                jobject = json.loads(second)
-                                del jobject[key]
-                                f.write(json.dumps(jobject))
+                            with open('fileconfig.discord', 'w') as f:
+                                del FILES[key]
+                                f.write(json.dumps(FILES))
                         else:
                             print('name: ' + str(FILES[key][0]) + ' | code: ' + str(key) + ' | size: ' + get_human_readable(FILES[key][1]))
                     print('\n')
@@ -136,11 +138,9 @@ def parse_args(inp):
                     print('DELETING: ' + FILES[code][0])
                     client = core.Core(os.getcwd() + "/", TOKEN_SECRET, ROOM_ID)
                     threading.Thread(target=tell_delete, args=(client, code,)).start()
-                    with open('config.discord', 'w') as f:
-                        f.write(first)
-                        jobject = json.loads(second)
-                        del jobject[code]
-                        f.write(json.dumps(jobject))
+                    with open('fileconfig.discord', 'w') as f:
+                        del FILES[code]
+                        f.write(json.dumps(FILES))
                     client.start()
                     break
             elif '-help' == el or '-h' == el:
@@ -170,33 +170,29 @@ def get_human_readable(size, precision=2):
         size = size / 1024.0  # apply the division
     return "%.*f%s" % (precision, size, suffixes[suffix_index])
 
-if not is_configured():
+if not is_bot_configured():
     print('Welcome to DiscordStorage.')
     print('Go to http://github.com/F4ir/DiscordStorage for instructions.')
     TOKEN_SECRET = input('Bot token ID (Will be stored in plaintext in config file):')
     ROOM_ID = input('Enter channel ID to store files in:')
     if len(ROOM_ID) <= 0:
         ROOM_ID = None
-    with open('config.discord', 'w') as f:
-        f.write(str(json.dumps({'TOKEN': TOKEN_SECRET, 'ROOM_ID': ROOM_ID})) + "\n")
-        f.write(str(json.dumps({})))
+    with open('botconfig.discord', 'w') as f:
+        f.write(json.dumps({'TOKEN': TOKEN_SECRET, 'ROOM_ID': ROOM_ID}))
 else:
-    with open('config.discord', 'r') as f:
-        first = f.readline()
-        second = f.readline()
-    BOT_INFO = json.loads(first)
-    FILES = json.loads(second)
-    TOKEN_SECRET = json.loads(first.replace("\\n", ""))['TOKEN']
-    ROOM_ID = json.loads(first.replace("\\n", ""))['ROOM_ID']
+    with open('botconfig.discord', 'r') as f:
+        BOT_INFO = json.loads(f.read())
+    TOKEN_SECRET = BOT_INFO['TOKEN']
+    ROOM_ID = BOT_INFO['ROOM_ID']
+
+if not is_file_configured():
+    with open('fileconfig.discord', 'w') as f:
+        f.write(json.dumps({}))
+else:
+    with open('fileconfig.discord', 'r') as f:
+        FILES = json.loads(f.read())
 
 try:
     parse_args(sys.argv)
 except IndexError:
-    print('\nUsage: python ds.py [command] (target)\n')
-    print('COMMANDS:')
-    print('[-h, -help]: Show the help message')
-    print('[-l, -list]: Lists all the file information that has been uploaded to the server')
-    print('[-d, -download] (FILE CODE): Downloads a file from the server. A file code is taken in as the file identifier')
-    print('[-u, -upload] (FILE PATH/DRAG FILE): Uploads a file to the server. The full file directory is taken in for the argument')
-    print('[-del, -delete] (FILE CODE): Deletes a file from the server and the configuration')
-    print('[-s, -share] (DRAG FILE): Shares a file by uploading it to gofile.io and providing a download link\n')
+    print('\n[ERROR] Invalid arguments. Use -h or -help for usage information.\n')
