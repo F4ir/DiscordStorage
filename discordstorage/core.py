@@ -1,3 +1,5 @@
+# DiscordStorage was proudly coded by F4ir
+
 import os
 import io
 import aiohttp
@@ -104,3 +106,5 @@ class Core:
     # Change accordingly if needed.
     def split_file(self, file_path):
         return (os.path.getsize(file_path) // 24000000) + 1
+
+# DiscordStorage was proudly coded by F4ir
