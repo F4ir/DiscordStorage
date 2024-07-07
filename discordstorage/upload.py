@@ -1,3 +1,5 @@
+# DiscordStorage was proudly coded by F4ir
+
 import requests
 import os
 
@@ -39,3 +41,5 @@ def get_human_readable(size, precision=2):
         suffix_index += 1
         size = size / 1024.0
     return "%.*f %s" % (precision, size, suffixes[suffix_index])
+
+# DiscordStorage was proudly coded by F4ir
