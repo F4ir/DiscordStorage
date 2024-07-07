@@ -7,7 +7,7 @@ import tempfile
 import stat
 
 # Define the current version
-current_version = "v0.6"
+current_version = "v0.7"
 
 # URL to check the latest version
 version_url = "https://raw.githubusercontent.com/F4ir/DiscordStorage/main/version.version"
