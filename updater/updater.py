@@ -1,3 +1,5 @@
+# DiscordStorage was proudly coded by F4ir
+
 import os
 import shutil
 import requests
@@ -141,3 +143,5 @@ def main():
 if __name__ == "__main__":
     main()
     input("Press Enter to close...")  # Keeps the command prompt open
+
+# DiscordStorage was proudly coded by F4ir
