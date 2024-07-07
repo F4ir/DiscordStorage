@@ -7,7 +7,7 @@ import tempfile
 import stat
 
 # Define the current version
-current_version = "v0.5"
+current_version = "v0.6"
 
 # URL to check the latest version
 version_url = "https://raw.githubusercontent.com/F4ir/DiscordStorage/main/version.version"
@@ -43,7 +43,7 @@ def hide_folder(directory, folder_name):
 
 def clear_directory(directory):
     for item in os.listdir(directory):
-        if item == "config.discord":
+        if item in ["botconfig.discord", "fileconfig.discord", "downloads"]:
             continue
         item_path = os.path.join(directory, item)
         try:
@@ -56,7 +56,7 @@ def clear_directory(directory):
 
 def is_directory_empty(directory):
     for item in os.listdir(directory):
-        if item != "config.discord":
+        if item not in ["botconfig.discord", "fileconfig.discord", "downloads"]:
             return False
     return True
 
