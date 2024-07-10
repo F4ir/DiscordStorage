@@ -27,13 +27,13 @@ ROOM_ID = ""
 BOT_INFO = None
 FILES = None
 
-# Generates a file code from 0-4097
+# Generates a file code from 0-9999
 def gen_code():
-    code = str(random.randint(0, 4098))
+    code = str(random.randint(0, 9999))
     if FILES is None:
         return code
     while code in FILES.keys():
-        code = str(random.randint(0, 4098))
+        code = str(random.randint(0, 9999))
     return code
 
 # Returns if the botconfig file is configured or not.
